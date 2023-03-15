@@ -11,6 +11,9 @@ const advance = (text) => {
 }
 
 const printList = (list) => {
+    if (!list) {
+        return false;
+    }
 
     let result = '['
 
@@ -31,25 +34,55 @@ const printList = (list) => {
 }
 
 const getParseTree = (text) => {
-    const getParseTreeRecursive = (scope) => {
-        if (text.length == 0)
+    const getParseTreeRecursive = (scope, isBraced=false, countOfComplex=0, countOfVars=0, countOfOps=0) => {
+        if (isBraced && (countOfComplex + countOfVars > 2 || countOfOps > 1))
+            return false;
+        
+        else if (! isBraced) {
+            // if (countOfVars > 0 && countOfComplex > 0)
+            //     return false;
+
+            // else if (countOfOps > 1)
+            //     return false;
+
+            // else if (countOfVars > 0 && countOfOps > 0)
+            //     return false;
+
+            if (countOfVars > 1)
+                return false;
+
+            else if (countOfComplex > 1)
+                return false;
+
+            else if (countOfOps > 1)
+                return false;
+        }
+
+        if (text.length == 0) {
+            if (isBraced)
+                return false;
+
             return scope;
+        }
 
         let ch = text[0];
 
         if (ch == '(') {
             text = advance(text);
-            let result = getParseTreeRecursive([])
+            let result = getParseTreeRecursive([], true)
 
             if (!result)
                 return result;
 
             scope.push(result);
-            return getParseTreeRecursive(scope);
+            return getParseTreeRecursive(scope, isBraced, countOfComplex + 1, countOfVars, countOfOps);
         }
 
         else if (ch == ')') {
             text = advance(text);
+
+            if (! isBraced)
+                return false;
 
             return scope;
         }
@@ -58,7 +91,7 @@ const getParseTree = (text) => {
             text = advance(text);
 
             scope.push(ch);
-            return getParseTreeRecursive(scope);
+            return getParseTreeRecursive(scope, isBraced, countOfComplex, countOfVars + 1, countOfOps);
         }
 
         else {
@@ -72,7 +105,7 @@ const getParseTree = (text) => {
                 text = advance(text);
             }
 
-            else if (text == '!')
+            else if (ch == '!')
                 scope.push('!');
 
             else
@@ -80,42 +113,14 @@ const getParseTree = (text) => {
 
             text = advance(text);
 
-            return getParseTreeRecursive(scope);
+            return getParseTreeRecursive(scope, isBraced, countOfComplex, countOfVars, countOfOps + 1);
         }
 
         return false;
     }
 
-    return getParseTreeRecursive([])
+    return getParseTreeRecursive([]);
 }
-
-// const getParseTree = (text) => {
-//     let result = [];
-//     let scope = result;
-//     let scopeStack = [];
-
-//     for (let i = 0; i < text.length; i ++) {
-//         let currentElement = text[i];
-
-//         if ("\\/!".includes(currentElement))
-//             continue;
-
-//         else if (currentElement == '(') {
-//             scopeStack.push(scope.slice());
-//             scope = [];
-//         }
-
-//         else if (currentElement == ')') {
-//             result.push(scope);
-//             scope = scopeStack.pop();
-//         }
-
-//         else if ("ABCDEFGHIJKLMNOPQRSTUVWXYZ".includes(currentElement))
-//             scope.push(currentElement);
-//     }
-
-//     return result;
-// }
 
 btn.addEventListener("click", () => {
     let text = field.value;
