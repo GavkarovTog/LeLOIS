@@ -1,5 +1,3 @@
-
-
 field = document.getElementById("inputfield");
 btn = document.getElementById("evalbutton");
 
@@ -122,13 +120,68 @@ const getParseTree = (text) => {
     return getParseTreeRecursive([]);
 }
 
+const extractTerms = (parseTree) => {
+    if (! parseTree)
+        return false;
+
+    let extractTermsRecursive = (currentTerm, isNegated=false, isDisjuncted=false) => {
+        let result = []
+
+        if (! Array.isArray(currentTerm)) {
+            // if (currentTerm == 'or' || currentTerm == 'and' || currentTerm == '!')
+            //     return [];
+
+            return [currentTerm];
+        }
+
+        let negated = false;
+        let disjuncted = false;
+        let conjuncted = false;
+
+        if (currentTerm.includes('!'))
+            negated = true;
+
+        else if (currentTerm.includes('or'))
+            disjuncted = true;
+
+        else if (currentTerm.includes('and'))
+            conjuncted = true;
+
+        if (isDisjuncted && conjuncted || isNegated && negated || isNegated && currentTerm.length > 1)
+            return false;
+
+        for (const term of currentTerm) {
+            if (term == 'or' || term == 'and' || term == '!')
+                continue;
+
+            let extracted = extractTermsRecursive(term, negated, disjuncted);
+
+            if (!extracted)
+                return false;
+
+            if (conjuncted) 
+                result.push(extracted);
+
+            else
+                result = result.concat(extracted);
+        }
+    
+        return result;
+    }
+
+    return extractTermsRecursive(parseTree);
+}
+
 btn.addEventListener("click", () => {
     let text = field.value;
 
     // parseTree = getParseTree(text)
     // terms = getAllConjunctions(parseTree);
+
+    let tree = getParseTree(text);
+    console.log(printList(tree));
     
-    console.log(printList(getParseTree(text)));
+    console.log(printList(extractTerms(tree)));
     // answer.innerHTML = getParseTree(text);
     // answer.innerHTML = isCDNF(terms);
 });
