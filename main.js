@@ -48,6 +48,52 @@ const countOfLists = (list) => {
     return countOfListsRecursive(0, 0);
 }
 
+const isEqualLists = (term1, term2) => {
+    if (! Array.isArray(term1) || ! Array.isArray(term2))
+        return false;
+
+    else if (term1.length != term2.length)
+        return false;
+
+    let result = true;
+
+    for (let i = 0; i < term1.length; i ++)
+        result = result && (term1[i] == term2[i]);
+
+    return result;
+}
+
+const hasDuplicatedVals = (term) => {
+    if (! term || term.length == 0 || ! Array.isArray(term))
+        return undefined;
+
+    let visited = [];
+
+    for (const vart of term) {
+        for (const varv of visited) 
+            if (vart == varv)
+                return true;
+
+        visited.push(vart);
+    }
+
+    return false;
+}
+
+const extractVars = (term, varList) => {
+    for (const vart of term)
+        if (! varList.includes(vart))
+            varList.push(vart);
+}
+
+const hasAllVars = (term, varList) => {
+    for (const varl of varList)
+      if (! term.includes(varl))
+        return false;
+
+    return true;
+}
+
 const getParseTree = (text) => {
     const getParseTreeRecursive = (scope, isBraced=false, countOfComplex=0, countOfVars=0, countOfOps=0) => {
         if (isBraced) {
@@ -183,10 +229,14 @@ const extractTerms = (parseTree) => {
             if (term == 'or' || term == 'and' || term == '!')
                 continue;
 
+
             let extracted = extractTermsRecursive(term, negated, disjuncted);
 
             if (!extracted)
                 return false;
+
+            if (isNegated) 
+                extracted = ['not ' + extracted[0]];
 
             if (conjuncted && countOfLists(extracted) == 0) 
                 result.push(extracted);
@@ -207,7 +257,37 @@ const extractTerms = (parseTree) => {
 }
 
 const checkForCNF = (terms) => {
-    
+    if (!terms)
+        return false;
+        
+    let visited = [];
+    let varList = [];
+
+    for (const term of terms) {
+        if (visited.length == 0) {
+            visited.push(term);
+            extractVars(term, varList);
+            continue;
+        }
+
+        for (const visitedTerm of visited) {
+            if (isEqualLists(visitedTerm, term))
+                return false;
+        }
+
+        extractVars(term, varList);
+        visited.push(term);
+    }
+
+    for (const term of visited) {
+        if (hasDuplicatedVals(term))
+            return false;
+
+        else if (! hasAllVars(term, varList))
+            return false;
+    }
+
+    return true;
 }
 
 btn.addEventListener("click", () => {
@@ -218,8 +298,12 @@ btn.addEventListener("click", () => {
 
     let tree = getParseTree(text);
     console.log(printList(tree));
-    
-    console.log(printList(extractTerms(tree)));
+
+    let extractedTerms = extractTerms(tree);
+
+    console.log(printList(extractedTerms));
+    console.log(checkForCNF(extractedTerms));
+
     // answer.innerHTML = getParseTree(text);
     // answer.innerHTML = isCDNF(terms);
 });
