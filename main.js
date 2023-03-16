@@ -31,10 +31,32 @@ const printList = (list) => {
     return result;
 }
 
+const countOfLists = (list) => {
+    if (! list)
+        return false;
+
+    const countOfListsRecursive = (index, count) => {
+        if (index == list.length)
+            return count;
+
+        else if (Array.isArray(list[index]))
+            return countOfListsRecursive(index + 1, count + 1);
+
+        return countOfListsRecursive(index + 1, count);
+    }
+
+    return countOfListsRecursive(0, 0);
+}
+
 const getParseTree = (text) => {
     const getParseTreeRecursive = (scope, isBraced=false, countOfComplex=0, countOfVars=0, countOfOps=0) => {
-        if (isBraced && (countOfComplex + countOfVars > 2 || countOfOps > 1))
-            return false;
+        if (isBraced) {
+            if (countOfComplex + countOfVars > 2)
+                return false;
+
+            else if (countOfOps > 1)
+                return false;
+        }
         
         else if (! isBraced) {
             // if (countOfVars > 0 && countOfComplex > 0)
@@ -46,7 +68,10 @@ const getParseTree = (text) => {
             // else if (countOfVars > 0 && countOfOps > 0)
             //     return false;
 
-            if (countOfVars > 1)
+            if (countOfVars > 0 && countOfComplex > 0)
+                return false;
+
+            else if (countOfVars > 1)
                 return false;
 
             else if (countOfComplex > 1)
@@ -79,7 +104,11 @@ const getParseTree = (text) => {
         else if (ch == ')') {
             text = advance(text);
 
-            if (! isBraced)
+            if (isBraced && countOfOps > 0 && countOfVars + countOfComplex < 2) {
+                return false;
+            }
+
+            else if (! isBraced)
                 return false;
 
             return scope;
@@ -116,7 +145,7 @@ const getParseTree = (text) => {
 
         return false;
     }
-
+    
     return getParseTreeRecursive([]);
 }
 
@@ -159,7 +188,7 @@ const extractTerms = (parseTree) => {
             if (!extracted)
                 return false;
 
-            if (conjuncted) 
+            if (conjuncted && countOfLists(extracted) == 0) 
                 result.push(extracted);
 
             else
@@ -169,7 +198,16 @@ const extractTerms = (parseTree) => {
         return result;
     }
 
-    return extractTermsRecursive(parseTree);
+    let result = extractTermsRecursive(parseTree); 
+
+    if (result && countOfLists(result) == 0) 
+        return [result];
+
+    return result;
+}
+
+const checkForCNF = (terms) => {
+    
 }
 
 btn.addEventListener("click", () => {
