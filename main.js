@@ -23,7 +23,7 @@ const printList = (list) => {
             result += list[i];
 
         if (i != list.length - 1)
-            result += ' ';
+            result += ', ';
     }
 
     result += ']';
@@ -58,7 +58,7 @@ const isEqualLists = (term1, term2) => {
     let result = true;
 
     for (let i = 0; i < term1.length; i ++)
-        result = result && (term1[i] == term2[i]);
+        result = result && (term2.includes(term1[i]));
 
     return result;
 }
@@ -82,13 +82,20 @@ const hasDuplicatedVals = (term) => {
 
 const extractVars = (term, varList) => {
     for (const vart of term)
-        if (! varList.includes(vart))
-            varList.push(vart);
+        if (! varList.includes(vart)) {
+            let divided = vart.split(' ');
+
+            if (divided.length == 1)
+                varList.push(vart);
+
+            else
+                varList.push(divided[1]);
+        }
 }
 
 const hasAllVars = (term, varList) => {
     for (const varl of varList)
-      if (! term.includes(varl))
+      if (! term.includes(varl) && ! term.includes('not ' + varl))
         return false;
 
     return true;
@@ -150,7 +157,10 @@ const getParseTree = (text) => {
         else if (ch == ')') {
             text = advance(text);
 
-            if (isBraced && countOfOps > 0 && countOfVars + countOfComplex < 2) {
+            if (isBraced && scope.includes('!') && countOfVars + countOfComplex < 1)
+                return false;
+
+            else if (isBraced && ! scope.includes('!') && countOfOps > 0 && countOfVars + countOfComplex < 2) {
                 return false;
             }
 
@@ -229,14 +239,13 @@ const extractTerms = (parseTree) => {
             if (term == 'or' || term == 'and' || term == '!')
                 continue;
 
-
             let extracted = extractTermsRecursive(term, negated, disjuncted);
 
             if (!extracted)
                 return false;
 
-            if (isNegated) 
-                extracted = ['not ' + extracted[0]];
+            else if (negated)
+                extracted = 'not ' + extracted;
 
             if (conjuncted && countOfLists(extracted) == 0) 
                 result.push(extracted);
