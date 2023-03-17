@@ -130,7 +130,7 @@ const getParseTree = (text) => {
             else if (countOfComplex > 1)
                 return false;
 
-            else if (countOfOps > 1)
+            else if (countOfOps > 0)
                 return false;
         }
 
@@ -165,6 +165,9 @@ const getParseTree = (text) => {
             }
 
             else if (! isBraced)
+                return false;
+
+            else if (scope.length == 0)
                 return false;
 
             return scope;
